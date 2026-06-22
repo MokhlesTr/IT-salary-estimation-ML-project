@@ -1,0 +1,15 @@
+Experience (years)
+Age
+Number of projects
+Job satisfaction
+Position_encoded
+Specialization_encoded
+Continent_encoded
+Gender_encoded
+Education_encoded
+Type of employment_encoded
+Experience_category_encoded
+Projects_per_year
+Age_group_encoded
+Experience_Age
+Projects_Experience
