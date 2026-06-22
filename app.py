@@ -1,15 +1,17 @@
+# pyrefly: ignore [missing-import]
 import streamlit as st
 import pandas as pd
 import numpy as np
 import pickle
 import os
+# pyrefly: ignore [missing-import]
 import altair as alt
 
 # Set page configuration
 st.set_page_config(
     page_title="IT Salary Predictor",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Custom CSS for Indigo Theme
@@ -48,8 +50,15 @@ st.markdown("""
         opacity: 0.9;
         color: #e2e8f0;
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
         color: #a5b4fc;
+    }
+    .project-insight-card {
+        background-color: rgba(255, 255, 255, 0.02);
+        padding: 20px;
+        border-radius: 10px;
+        border-left: 5px solid #4f46e5;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -143,28 +152,12 @@ def plot_salary_distribution(df, predicted_salary=None):
     )
     
     if predicted_salary is not None:
-        rule = alt.Chart(pd.DataFrame({'predicted': [predicted_salary]})).mark_rule(color='#fbbf24', size=3).encode(
+        rule = alt.Chart(pd.DataFrame({'predicted': [predicted_salary]})).mark_rule(color='#fbbf24', size=4).encode(
             x='predicted:Q',
             tooltip=[alt.Tooltip('predicted:Q', title='Your Prediction', format=',.0f')]
         )
         return (base_chart + rule).properties(height=300)
     return base_chart.properties(height=300)
-
-def plot_salary_by_continent(df):
-    chart = alt.Chart(df).mark_boxplot(color='#818cf8', size=40).encode(
-        x=alt.X('Continent:N', title=''),
-        y=alt.Y('Salary ($/year):Q', title='Salary ($)'),
-        color=alt.Color('Continent:N', legend=None, scale=alt.Scale(scheme='indigo'))
-    ).properties(height=350)
-    return chart
-
-def plot_salary_vs_experience(df):
-    chart = alt.Chart(df).mark_circle(size=60, opacity=0.6, color='#6366f1').encode(
-        x=alt.X('Experience (years):Q', title='Years of Experience'),
-        y=alt.Y('Salary ($/year):Q', title='Salary ($)'),
-        tooltip=['Position', 'Experience (years)', 'Salary ($/year)']
-    ).properties(height=350)
-    return chart
 
 def main():
     data_objects, model, status_msg = load_models_and_data()
@@ -174,115 +167,124 @@ def main():
         
     df_orig = data_objects['df_original']
 
-    # Sidebar Navigation
-    with st.sidebar:
-        st.markdown("<h2 style='text-align: center; color: #a5b4fc;'>IT Salary AI</h2>", unsafe_allow_html=True)
-        st.markdown("---")
-        menu = st.radio("Navigation", ["🎯 AI Predictor", "📊 Market Dashboard", "🧠 Model Analysis", "📚 Methodology"])
-        st.markdown("---")
-        st.caption(f"🔧 {status_msg}")
-        st.caption(f"📈 Dataset: {len(df_orig)} records")
-
-    if menu == "🎯 AI Predictor":
-        st.title("AI Compensation Predictor")
+    st.title("AI Compensation Predictor")
+    
+    btn_col1, btn_col2, btn_col3, btn_col4 = st.columns([1.5, 1, 1, 1])
+    with btn_col1:
         st.write("Enter professional parameters below to estimate the annual compensation.")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            position = st.selectbox("Job Position", options=sorted(df_orig['Position'].unique()))
-            specialization = st.selectbox("Specialization Area", options=sorted(df_orig['Specialization'].unique()))
-            experience = st.number_input("Years of Experience", min_value=0, max_value=50, value=5)
-            num_projects = st.number_input("Number of Projects Completed", min_value=0, max_value=500, value=10)
-            job_satisfaction = st.slider("Job Satisfaction Rating (0-100)", min_value=0, max_value=100, value=75)
+    with btn_col2:
+        if st.button("📊 Open Presentation", use_container_width=True):
+            os.system('open "IT Specialists Salary Prediction_ An End-to-End Machine Learning Pipeline.pptx"')
+    with btn_col3:
+        st.link_button("📓 Kaggle Notebook", "https://www.kaggle.com/code/mokhlestarmiz00/exam-notebook", use_container_width=True)
+    with btn_col4:
+        st.link_button("🐙 GitHub Repo", "https://github.com/MokhlesTr/IT-salary-estimation-ML-project", use_container_width=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        position = st.selectbox("Job Position", options=sorted(df_orig['Position'].unique()))
+        specialization = st.selectbox("Specialization Area", options=sorted(df_orig['Specialization'].unique()))
+        experience = st.number_input("Years of Experience", min_value=0, max_value=50, value=5)
+        num_projects = st.number_input("Number of Projects Completed", min_value=0, max_value=500, value=10)
+        job_satisfaction = st.slider("Job Satisfaction Rating (0-100)", min_value=0, max_value=100, value=75)
 
-        with col2:
-            age = st.number_input("Age", min_value=18, max_value=80, value=30)
-            continent = st.selectbox("Continent", options=sorted(df_orig['Continent'].unique()))
-            gender = st.selectbox("Gender", options=sorted(df_orig['Gender'].unique()))
-            education = st.selectbox("Highest Education Level", options=sorted(df_orig['Education'].unique()))
-            employment_type = st.selectbox("Employment Type", options=sorted(df_orig['Type of employment'].unique()))
+    with col2:
+        age = st.number_input("Age", min_value=18, max_value=80, value=30)
+        continent = st.selectbox("Continent", options=sorted(df_orig['Continent'].unique()))
+        gender = st.selectbox("Gender", options=sorted(df_orig['Gender'].unique()))
+        education = st.selectbox("Highest Education Level", options=sorted(df_orig['Education'].unique()))
+        employment_type = st.selectbox("Employment Type", options=sorted(df_orig['Type of employment'].unique()))
 
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    if st.button("CALCULATE PREDICTED SALARY", type="primary", use_container_width=True):
+        user_input = {
+            'Experience (years)': experience, 'Age': age, 'Number of projects': num_projects,
+            'Job satisfaction': job_satisfaction, 'Position': position, 'Specialization': specialization,
+            'Continent': continent, 'Gender': gender, 'Education': education, 'Type of employment': employment_type
+        }
         
-        if st.button("CALCULATE PREDICTED SALARY", type="primary", use_container_width=True):
-            user_input = {
-                'Experience (years)': experience, 'Age': age, 'Number of projects': num_projects,
-                'Job satisfaction': job_satisfaction, 'Position': position, 'Specialization': specialization,
-                'Continent': continent, 'Gender': gender, 'Education': education, 'Type of employment': employment_type
-            }
+        with st.spinner("Processing input and executing model..."):
+            X_processed = process_input(user_input, data_objects)
+            prediction = model.predict(X_processed)[0]
             
-            with st.spinner("Processing input and executing model..."):
-                X_processed = process_input(user_input, data_objects)
-                prediction = model.predict(X_processed)[0]
-                
-                # Show Result and Chart side by side
-                res_col, chart_col = st.columns([1, 1.5])
-                with res_col:
-                    st.markdown(f"""
-                    <div class="prediction-container">
-                        <div class="prediction-subtitle">Estimated Annual Compensation</div>
-                        <div class="prediction-value">${prediction:,.2f}</div>
-                        <div class="prediction-subtitle">Predicted using {status_msg.split()[-1]}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                with chart_col:
-                    st.markdown("**Market Position**")
-                    st.caption("The yellow line represents your predicted salary compared to the entire market dataset.")
-                    st.altair_chart(plot_salary_distribution(df_orig, predicted_salary=prediction), use_container_width=True)
+            # Show Result and Chart side by side
+            res_col, chart_col = st.columns([1, 1.5])
+            with res_col:
+                st.markdown(f"""
+                <div class="prediction-container">
+                    <div class="prediction-subtitle">Estimated Annual Compensation</div>
+                    <div class="prediction-value">${prediction:,.2f}</div>
+                    <div class="prediction-subtitle">Predicted using {status_msg.split()[-1]}</div>
+                </div>
+                """, unsafe_allow_html=True)
+            with chart_col:
+                st.markdown("**Market Position**")
+                st.caption("The yellow line represents your predicted salary compared to the entire market dataset.")
+                st.altair_chart(plot_salary_distribution(df_orig, predicted_salary=prediction), use_container_width=True)
 
-    elif menu == "📊 Market Dashboard":
-        st.title("Global IT Market Dashboard")
-        st.write("Explore the underlying trends in the IT professional dataset.")
-        
-        dash_col1, dash_col2 = st.columns(2)
-        with dash_col1:
-            st.subheader("Salary Distribution by Continent")
-            st.altair_chart(plot_salary_by_continent(df_orig), use_container_width=True)
-        with dash_col2:
-            st.subheader("Salary vs. Experience")
-            st.altair_chart(plot_salary_vs_experience(df_orig), use_container_width=True)
+    st.markdown("---")
+    
+    # -------------------------------------------------------------
+    # PROJECT DOCUMENTATION & PRESENTATION SUMMARY (MOVED TO MAIN PAGE)
+    # -------------------------------------------------------------
+    st.title("Project Summary & Methodology")
+    st.write("A deep dive into the data engineering and machine learning techniques used to build this AI.")
 
-        st.subheader("Overall Salary Distribution")
-        st.altair_chart(plot_salary_distribution(df_orig), use_container_width=True)
+    doc_col1, doc_col2 = st.columns(2)
 
-    elif menu == "🧠 Model Analysis":
-        st.title("Model Feature Importance")
-        st.write("Understand which parameters carry the most weight in the AI's decision-making process.")
-        
-        feat_col, text_col = st.columns([2, 1])
-        with feat_col:
-            st.altair_chart(plot_feature_importance(model, data_objects['feature_names']), use_container_width=True)
-        with text_col:
-            st.info("""
-            **Analysis Insights:**
-            - Features at the top strictly dictate the predicted salary.
-            - **Experience_Age** (an engineered interaction feature) heavily outperforms individual base features.
-            - **Job Satisfaction** plays a surprising but significant role in compensation variance.
-            """)
+    with doc_col1:
+        st.markdown("""
+        <div class="project-insight-card">
+            <h4>1. Data Preprocessing & Cleaning</h4>
+            <p><strong>Missing Values:</strong> Handled gracefully by imputing 'Unknown' for categorical variables to retain maximum dataset density.</p>
+            <p><strong>Outliers Treatment:</strong> Applied the robust Interquartile Range (IQR) method to cap extreme salary anomalies.</p>
+            <p><strong>Effect on Results:</strong> Capping extreme salaries drastically reduced the skewness of our target variable, allowing the model to learn general market trends rather than memorizing a few ultra-high-paying outliers.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    elif menu == "📚 Methodology":
-        st.title("Project Methodology & Documentation")
-        
-        st.subheader("1. Data Preprocessing & Cleaning")
-        st.write("""
-        - **Missing Values:** Imputed 'Unknown' for categorical variables to prevent data loss.
-        - **Outliers:** Applied Interquartile Range (IQR) method to cap extreme salary anomalies.
-        - **Impact:** Reduced skewness and improved generalized learning.
-        """)
+        st.markdown("""
+        <div class="project-insight-card">
+            <h4>3. Algorithm Selection & Optimization</h4>
+            <p>We rigorously tested three algorithms:</p>
+            <ul>
+                <li><strong>Linear Regression:</strong> Used as our baseline model.</li>
+                <li><strong>Random Forest:</strong> To capture non-linear relationships.</li>
+                <li><strong>XGBoost (The Winner):</strong> An advanced distributed gradient boosting library.</li>
+            </ul>
+            <p><strong>Optimization:</strong> We utilized <code>GridSearchCV</code> with 5-fold cross-validation to find the absolute best hyperparameter combinations (depth, learning rate) for our models.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.subheader("2. Feature Engineering")
-        st.write("""
-        - **Interaction Terms:** Created complex variables like `Experience × Age`.
-        - **Categorization:** Discretized continuous age and experience into logical bins.
-        - **Productivity:** Created `Projects_per_year` ratio.
-        """)
+    with doc_col2:
+        st.markdown("""
+        <div class="project-insight-card">
+            <h4>2. Feature Engineering (The Best Thing)</h4>
+            <p>Instead of relying purely on raw data, we engineered synthetic features to help the AI find deeper mathematical correlations:</p>
+            <ul>
+                <li><strong>Interaction Variables:</strong> Created <code>Experience × Age</code> and <code>Projects × Experience</code>.</li>
+                <li><strong>Categorization:</strong> Discretized continuous ages into logical bins.</li>
+                <li><strong>Productivity:</strong> Derived a <code>Projects_per_year</code> ratio.</li>
+            </ul>
+            <p><strong>Effect on Results:</strong> Our engineered <code>Experience_Age</code> feature emerged as one of the most powerful predictive variables in the entire dataset!</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.subheader("3. Algorithm Selection")
-        st.write("""
-        Evaluated Linear Regression, Random Forest, and XGBoost.
-        - Used **GridSearchCV** with 5-fold Cross-Validation for hyperparameter tuning.
-        - **XGBoost** was selected as the optimal model for achieving the highest R² Score.
-        """)
+        st.markdown("""
+        <div class="project-insight-card">
+            <h4>4. Final Results & Insights</h4>
+            <p><strong>Best Algorithm:</strong> XGBoost achieved the highest R² Score and the lowest Root Mean Squared Error (RMSE).</p>
+            <p><strong>Surprising Finding:</strong> 'Job Satisfaction' and 'Experience_Age' consistently outranked basic variables like 'Education Level' in determining compensation.</p>
+            <p><strong>Model Honesty:</strong> Due to utilizing complex algorithms on a smaller dataset (504 rows), we noted mild overfitting in training. This is a highly authentic constraint of real-world machine learning on limited data.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.subheader("Model Feature Importance")
+    st.write("Visualizing the exact parameters that drive the XGBoost algorithm's predictions.")
+    st.altair_chart(plot_feature_importance(model, data_objects['feature_names']), use_container_width=True)
 
 if __name__ == "__main__":
     main()
